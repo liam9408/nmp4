@@ -4,7 +4,7 @@ import { Column, Model, Table } from 'sequelize-typescript';
   modelName: 'student',
   tableName: 'students',
   underscored: true,
-  timestamps: true,
+  timestamps: false,
 })
 export class Student extends Model {
   @Column
