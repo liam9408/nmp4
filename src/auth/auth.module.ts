@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Student } from './models/user.model';
 
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
+import { User } from 'src/db/entities/user.model';
+import { UsersService } from 'src/users/users.service';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Student]),
+    SequelizeModule.forFeature([User]),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
@@ -16,6 +16,6 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [UsersService],
 })
 export class AuthModule {}
