@@ -13,7 +13,7 @@ import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { RolesGuard } from 'src/common/guards/roles.guard';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('reports')

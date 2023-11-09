@@ -5,11 +5,11 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { ResultsModule } from './results/results.module';
 import { ReportsModule } from './reports/reports.module';
-import { DatabaseModule } from './db/database.module';
+import { DatabaseModule } from './database/database.module';
 import { RoleModule } from './role/role.module';
 import { UserRolesModule } from './user-roles/user-roles.module';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth/auth.guard';
+import { AuthGuard } from './common/guards/auth.guard';
 
 @Module({
   imports: [

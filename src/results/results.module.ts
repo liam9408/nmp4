@@ -1,12 +1,12 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ResultsService } from './results.service';
 import { ResultsController } from './results.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Result } from 'src/db/entities/result.model';
-import { AuthModule } from 'src/auth/auth.module';
+import { Result } from 'src/database/entities/result.model';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Result]), forwardRef(() => AuthModule)],
+  imports: [SequelizeModule.forFeature([Result]), UsersModule],
   controllers: [ResultsController],
   providers: [ResultsService],
 })

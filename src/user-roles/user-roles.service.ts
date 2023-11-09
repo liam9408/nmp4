@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
 import { FindUseRoleDto } from './dto/find-user-role.dto';
-import { UserRole } from 'src/db/entities/userRole.model';
+import { UserRole } from 'src/database/entities/userRole.model';
 
 @Injectable()
 export class UserRolesService {

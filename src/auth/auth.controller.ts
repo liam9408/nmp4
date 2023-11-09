@@ -8,12 +8,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { User } from 'src/db/entities/user.model';
+import { User } from 'src/database/entities/user.model';
 import { SignInDto } from './dto/sign-in.dto';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from './auth.service';
 import { TokenData } from './auth.interface';
-import { AllowUnauthorizedRequest, AuthGuard } from 'src/auth/auth.guard';
+import {
+  AllowUnauthorizedRequest,
+  AuthGuard,
+} from 'src/common/guards/auth.guard';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const bcrypt = require('bcrypt');

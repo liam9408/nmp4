@@ -2,7 +2,7 @@ import { FindOptions } from 'sequelize';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
-import { User } from '../db/entities/user.model';
+import { User } from '../database/entities/user.model';
 import { FindUserDto } from './dto/find-user.dto';
 
 @Injectable()

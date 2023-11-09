@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FindResultDto } from './dto/find-result.dto';
 import { InjectModel } from '@nestjs/sequelize';
-import { Result } from 'src/db/entities/result.model';
+import { Result } from 'src/database/entities/result.model';
 import { FindOptions } from 'sequelize';
 
 @Injectable()

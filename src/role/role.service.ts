@@ -2,7 +2,7 @@ import { FindOptions } from 'sequelize';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
-import { Role } from '../db/entities/role.model';
+import { Role } from '../database/entities/role.model';
 import { FindRoleDto } from './dto/find-role.dto';
 
 @Injectable()
