@@ -4,8 +4,12 @@ import {
   Table,
   DataType,
   ForeignKey,
+  BelongsToMany,
+  BelongsTo,
 } from 'sequelize-typescript';
 import { Tenant } from './tenant.model'; // Import the Tenant model if you have one
+import { Role } from './role.model';
+import { UserRole } from './userRole.model';
 
 @Table({
   modelName: 'user',
@@ -101,4 +105,14 @@ export class User extends Model {
     allowNull: true,
   })
   tenant_id: number;
+
+  @BelongsTo(() => Tenant)
+  tenant: Tenant;
+
+  @BelongsToMany(() => Role, () => UserRole)
+  roles: Role[];
+
+  getRoles: () => Role[];
+
+  getTenant: () => Tenant;
 }

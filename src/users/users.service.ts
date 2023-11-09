@@ -19,6 +19,6 @@ export class UsersService {
 
   async findOne(findResultDto?: FindOptions<FindUserDto>): Promise<User> {
     const result = await this.userModel.findOne({ ...findResultDto });
-    return result.toJSON();
+    return result;
   }
 }

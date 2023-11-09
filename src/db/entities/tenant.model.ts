@@ -4,6 +4,7 @@ import {
   Table,
   DataType,
   ForeignKey,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from './user.model'; // Import the User model if you have one
 
@@ -70,4 +71,7 @@ export class Tenant extends Model {
     allowNull: true,
   })
   modified_by_id: number;
+
+  @HasMany(() => User)
+  users: User[];
 }

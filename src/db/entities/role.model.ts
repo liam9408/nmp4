@@ -4,8 +4,10 @@ import {
   Table,
   DataType,
   ForeignKey,
+  BelongsToMany,
 } from 'sequelize-typescript';
 import { User } from './user.model'; // Import the User model if you have one
+import { UserRole } from './userRole.model';
 
 @Table({
   modelName: 'role',
@@ -64,4 +66,7 @@ export class Role extends Model {
     allowNull: true,
   })
   modified_by_id: number;
+
+  @BelongsToMany(() => User, () => UserRole)
+  users: User[];
 }
