@@ -1,48 +1,34 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
-import { ReportsService } from './reports.service';
-import { CreateReportDto } from './dto/create-report.dto';
-import { UpdateReportDto } from './dto/update-report.dto';
+import { Controller, Get, Param, UseGuards, Request } from '@nestjs/common';
+import { ResultsService } from 'src/results/results.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { AuthGuard } from 'src/common/guards/auth.guard';
+import { UsersService } from 'src/users/users.service';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('reports')
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
-
-  @Post()
-  create(@Body() createReportDto: CreateReportDto) {
-    return this.reportsService.create(createReportDto);
-  }
+  constructor(
+    private readonly resultsService: ResultsService,
+    private readonly userService: UsersService,
+  ) {}
 
   @Get()
-  findAll(@Request() req) {
-    console.log(req.userId);
-    return this.reportsService.findAll();
+  async findAll(@Request() req) {
+    const { tenantId } = req;
+    const allTenantUsers = await this.userService.findAll({
+      where: {
+        tenant_id: tenantId,
+      },
+    });
+
+    const allUserIds = allTenantUsers.map((user) => user.id);
+    return this.resultsService.findAll({
+      where: { created_by_id: allUserIds },
+    });
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.reportsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReportDto: UpdateReportDto) {
-    return this.reportsService.update(+id, updateReportDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reportsService.remove(+id);
+    return this.resultsService.findOne({ where: { id } });
   }
 }
