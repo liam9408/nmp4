@@ -4,6 +4,9 @@ import {
   Table,
   DataType,
   ForeignKey,
+  BelongsTo,
+  HasMany,
+  HasOne,
 } from 'sequelize-typescript';
 import { User } from './user.model'; // Import the User model if you have one
 import { Question } from './question.model'; // Import the Question model if you have one
@@ -68,10 +71,19 @@ export class Answer extends Model {
   })
   question_id: number;
 
+  @BelongsTo(() => Question)
+  question: Question;
+
   @ForeignKey(() => Result)
   @Column({
     type: DataType.INTEGER,
     allowNull: true,
   })
   result_id: number;
+
+  @BelongsTo(() => Result)
+  result: Result;
+
+  // @BelongsTo(() => Result)
+  // result: Result;
 }

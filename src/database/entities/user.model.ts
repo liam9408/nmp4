@@ -6,10 +6,12 @@ import {
   ForeignKey,
   BelongsToMany,
   BelongsTo,
+  HasMany,
 } from 'sequelize-typescript';
 import { Tenant } from './tenant.model'; // Import the Tenant model if you have one
 import { Role } from './role.model';
 import { UserRole } from './userRole.model';
+import { Assignment } from './assignment.model';
 
 @Table({
   modelName: 'user',
@@ -111,6 +113,9 @@ export class User extends Model {
 
   @BelongsToMany(() => Role, () => UserRole)
   roles: Role[];
+
+  @HasMany(() => Assignment)
+  assignments: Assignment[];
 
   getRoles: () => Role[];
 

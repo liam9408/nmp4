@@ -4,6 +4,7 @@ import {
   Table,
   DataType,
   ForeignKey,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from './user.model'; // Import the User model if you have one
 import { Answer } from './answer.model'; // Import the Answer model if you have one
@@ -96,12 +97,15 @@ export class Result extends Model {
   })
   modified_by_id: number;
 
-  @ForeignKey(() => Answer)
+  // @ForeignKey(() => Answer)
   @Column({
     type: DataType.INTEGER,
     allowNull: true,
   })
   answer_id: number;
+
+  @HasMany(() => Answer)
+  answer: Answer;
 
   @Column({
     type: DataType.TEXT('long'),

@@ -4,9 +4,13 @@ import {
   Table,
   DataType,
   ForeignKey,
+  HasMany,
+  BelongsTo,
 } from 'sequelize-typescript';
-import { User } from './user.model'; // Import the User model if you have one
-import { Module } from './module.model'; // Import the Module model if you have one
+import { User } from './user.model';
+import { Module } from './module.model';
+import { Assignment } from './assignment.model';
+import { Question } from './question.model';
 
 @Table({
   modelName: 'scenario',
@@ -114,4 +118,13 @@ export class Scenario extends Model {
     allowNull: true,
   })
   user_scenario_value: string;
+
+  @HasMany(() => Assignment)
+  assignments: Assignment[];
+
+  @HasMany(() => Question)
+  questions: Question[];
+
+  @BelongsTo(() => Module)
+  module: Module;
 }

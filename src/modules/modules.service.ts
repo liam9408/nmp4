@@ -2,20 +2,20 @@ import { FindOptions } from 'sequelize';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
-import { User } from '../database/entities/user.model';
-import { FindUserDto } from './dto/find-user.dto';
+import { FindModulesDto } from './dto/find-modules.dto';
 import { Assignment } from 'src/database/entities/assignment.model';
 import { Answer } from 'src/database/entities/answer.model';
 import { Scenario } from 'src/database/entities/scenario.model';
 import { Question } from 'src/database/entities/question.model';
 import { Result } from 'src/database/entities/result.model';
-import { UserAssignment } from 'src/reports/reports.interface';
+import { Module } from 'src/database/entities/module.model';
+import { Module as ModuleWithAssignment } from './modules.interface';
 
 @Injectable()
-export class UsersService {
+export class ModulesService {
   constructor(
-    @InjectModel(User)
-    private readonly userModel: typeof User,
+    @InjectModel(Module)
+    private readonly moduleModel: typeof Module,
     @InjectModel(Assignment)
     private readonly assignmentModel: typeof Assignment,
     @InjectModel(Answer)
@@ -28,41 +28,31 @@ export class UsersService {
     private readonly resultModel: typeof Result,
   ) {}
 
-  async findAll(
-    findResultDto?: FindOptions<FindUserDto>,
-    // attributes?: string[],
-  ): Promise<User[]> {
-    const results = await this.userModel.findAll({
-      ...findResultDto,
-      attributes: {
-        // ...(attributes && { include: attributes }),
-        exclude: ['password', 'verification_code'],
-      },
-    });
-    return results.map((result) => result.toJSON());
-  }
-
-  async findUserAssignments(
-    findResultDto?: FindOptions<FindUserDto>,
-  ): Promise<UserAssignment[]> {
-    const results = await this.userModel.findAll({
-      ...findResultDto,
-      attributes: { exclude: ['password', 'verification_code'] },
+  async findAllModules(
+    findModuleDto?: FindOptions<FindModulesDto>,
+  ): Promise<ModuleWithAssignment[]> {
+    const results = await this.moduleModel.findAll({
+      ...findModuleDto,
       include: [
         {
-          model: this.assignmentModel,
+          model: this.scenarioModel,
           include: [
             {
-              model: this.scenarioModel,
+              model: this.assignmentModel,
+              attributes: ['id'],
               include: [
                 {
-                  model: this.questionModel,
+                  model: this.scenarioModel,
+                  attributes: ['id'],
                   include: [
                     {
-                      model: this.answerModel,
+                      model: this.questionModel,
+                      attributes: ['id'],
                       include: [
                         {
-                          model: this.resultModel,
+                          model: this.answerModel,
+                          attributes: ['id'],
+                          include: [{ model: this.resultModel }],
                         },
                       ],
                     },
@@ -77,8 +67,8 @@ export class UsersService {
     return results.map((result) => result.toJSON());
   }
 
-  async findOne(findResultDto?: FindOptions<FindUserDto>): Promise<User> {
-    const result = await this.userModel.findOne({ ...findResultDto });
+  async findOne(findModuleDto?: FindOptions<FindModulesDto>): Promise<Module> {
+    const result = await this.moduleModel.findOne({ ...findModuleDto });
     return result;
   }
 }

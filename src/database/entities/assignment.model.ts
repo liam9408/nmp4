@@ -4,9 +4,10 @@ import {
   Table,
   DataType,
   ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
-import { User } from './user.model'; // Import the User model if you have one
-import { Scenario } from './scenario.model'; // Import the Scenario model if you have one
+import { User } from './user.model';
+import { Scenario } from './scenario.model';
 
 @Table({
   modelName: 'assignment',
@@ -61,10 +62,16 @@ export class Assignment extends Model {
   })
   scenario_id: number;
 
+  @BelongsTo(() => Scenario)
+  scenario: Scenario;
+
   @ForeignKey(() => User)
   @Column({
     type: DataType.INTEGER,
     allowNull: true,
   })
   user_id: number;
+
+  @BelongsTo(() => User)
+  user: User;
 }

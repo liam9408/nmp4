@@ -10,6 +10,9 @@ import { RoleModule } from './role/role.module';
 import { UserRolesModule } from './user-roles/user-roles.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './common/guards/auth.guard';
+import { AssignmentsModule } from './assignments/assignments.module';
+import { ModulesModule } from './modules/modules.module';
+import { ScenariosModule } from './scenarios/scenarios.module';
 
 @Module({
   imports: [
@@ -21,6 +24,9 @@ import { AuthGuard } from './common/guards/auth.guard';
     ResultsModule,
     RoleModule,
     UserRolesModule,
+    AssignmentsModule,
+    ModulesModule,
+    ScenariosModule,
   ],
   providers: [
     {

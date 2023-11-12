@@ -4,9 +4,12 @@ import {
   Table,
   DataType,
   ForeignKey,
+  BelongsTo,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from './user.model'; // Import the User model if you have one
 import { Scenario } from './scenario.model'; // Import the Scenario model if you have one
+import { Answer } from './answer.model';
 
 @Table({
   modelName: 'question',
@@ -79,6 +82,9 @@ export class Question extends Model {
   })
   scenario_id: number;
 
+  @BelongsTo(() => Scenario)
+  scenario: Scenario;
+
   @Column({
     type: DataType.TEXT('long'),
     allowNull: true,
@@ -114,4 +120,7 @@ export class Question extends Model {
     allowNull: true,
   })
   customer_audio_file_url: string;
+
+  @HasMany(() => Answer)
+  answers: Answer[];
 }

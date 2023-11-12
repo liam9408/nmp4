@@ -1,21 +1,18 @@
-import { Module } from '@nestjs/common';
+import { ModulesService } from './modules.service';
+import { ModulesController } from './modules.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
-
-import { UsersService } from './users.service';
-import { UsersController } from './users.controller';
-import { User } from '../database/entities/user.model';
-import { Tenant } from 'src/database/entities/tenant.model';
 import { Assignment } from 'src/database/entities/assignment.model';
+import { Module as ModuleModel } from 'src/database/entities/module.model';
 import { Answer } from 'src/database/entities/answer.model';
 import { Scenario } from 'src/database/entities/scenario.model';
 import { Question } from 'src/database/entities/question.model';
+import { Module } from '@nestjs/common';
 import { Result } from 'src/database/entities/result.model';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([
-      User,
-      Tenant,
+      ModuleModel,
       Assignment,
       Answer,
       Scenario,
@@ -23,8 +20,8 @@ import { Result } from 'src/database/entities/result.model';
       Result,
     ]),
   ],
-  providers: [UsersService],
-  controllers: [UsersController],
-  exports: [UsersService],
+  controllers: [ModulesController],
+  providers: [ModulesService],
+  exports: [ModulesService],
 })
-export class UsersModule {}
+export class ModulesModule {}

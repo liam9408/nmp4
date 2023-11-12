@@ -4,9 +4,11 @@ import {
   Table,
   DataType,
   ForeignKey,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from './user.model'; // Import the User model if you have one
 import { Tenant } from './tenant.model'; // Import the Tenant model if you have one
+import { Scenario } from './scenario.model';
 
 @Table({
   modelName: 'module',
@@ -66,4 +68,7 @@ export class Module extends Model {
     allowNull: true,
   })
   tenant_id: number;
+
+  @HasMany(() => Scenario)
+  scenarios: Scenario[];
 }
