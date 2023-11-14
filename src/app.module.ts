@@ -13,6 +13,7 @@ import { AuthGuard } from './common/guards/auth.guard';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { ModulesModule } from './modules/modules.module';
 import { ScenariosModule } from './scenarios/scenarios.module';
+import { AnswersModule } from './answers/answers.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ScenariosModule } from './scenarios/scenarios.module';
     AssignmentsModule,
     ModulesModule,
     ScenariosModule,
+    AnswersModule,
   ],
   providers: [
     {

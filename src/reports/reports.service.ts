@@ -5,6 +5,7 @@ import { Result } from 'src/results/results.interface';
 import { Module } from 'src/modules/modules.interface';
 import { quickSort } from 'src/common/utils/quickSort';
 import { roundToOneDecimal } from 'src/common/utils/maths';
+import { Answer } from 'src/database/entities/answer.model';
 
 @Injectable()
 export class ReportsService {
@@ -40,7 +41,7 @@ export class ReportsService {
       ),
     );
 
-    const bestScore = quickSort(allResults, 'pronunciation')[0];
+    const bestScore = quickSort(allResults, 'pronunciation', 'DESC')[0];
     return bestScore ? bestScore.pronunciation : null;
   }
 
@@ -80,8 +81,8 @@ export class ReportsService {
     return results;
   }
 
-  static getTopModuleCompletions(data) {
-    const sortedResults = quickSort(data, 'completionRate');
+  static getTopOrBottomModuleCompletions(data, order) {
+    const sortedResults = quickSort(data, 'completionRate', order);
     return sortedResults.splice(0, 5);
   }
 
@@ -98,5 +99,43 @@ export class ReportsService {
     const avgIntonation = roundToOneDecimal(totalIntonation / results.length);
 
     return { avgClarity, avgIntonation };
+  }
+
+  static tallyPracticeFrequency(data: { [key: number]: Answer[] }) {
+    const practiceFrequencyTally = {
+      '0 - 5': 0,
+      '6 - 10': 0,
+      '11 - 20': 0,
+      '21 - 30': 0,
+      '31 - 40': 0,
+      '41 +': 0,
+    };
+
+    function tally(frequency: number) {
+      if (frequency <= 5) {
+        practiceFrequencyTally['0 - 5']++;
+      }
+      if (frequency >= 6 && frequency <= 10) {
+        practiceFrequencyTally['6 - 10']++;
+      }
+      if (frequency >= 11 && frequency <= 20) {
+        practiceFrequencyTally['11 - 20']++;
+      }
+      if (frequency >= 21 && frequency <= 30) {
+        practiceFrequencyTally['21 - 30']++;
+      }
+      if (frequency >= 31 && frequency <= 40) {
+        practiceFrequencyTally['31 - 40']++;
+      }
+      if (frequency >= 41) {
+        practiceFrequencyTally['41 +']++;
+      }
+    }
+
+    for (const [, val] of Object.entries(data)) {
+      tally(val.length);
+    }
+
+    return practiceFrequencyTally;
   }
 }

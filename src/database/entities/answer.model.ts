@@ -5,8 +5,6 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-  HasMany,
-  HasOne,
 } from 'sequelize-typescript';
 import { User } from './user.model'; // Import the User model if you have one
 import { Question } from './question.model'; // Import the Question model if you have one

@@ -8,8 +8,9 @@ import { StudentProgressResponse, UserAssignment } from './reports.interface';
 import { AssignmentsService } from 'src/assignments/assignments.service';
 import { ModulesService } from 'src/modules/modules.service';
 import { Module } from 'src/modules/modules.interface';
-import { Assignment } from 'src/assignments/assignments.interface';
-import { quickSort } from 'src/common/utils/quickSort';
+import { AnswersService } from 'src/answers/answers.service';
+import { groupBy } from 'lodash';
+import { User } from 'src/users/user.interface';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('reports')
@@ -19,6 +20,7 @@ export class ReportsController {
     private readonly userService: UsersService,
     private readonly assignmentService: AssignmentsService,
     private readonly modulesService: ModulesService,
+    private readonly answerService: AnswersService,
   ) {}
 
   @Get('progress/students')
@@ -79,34 +81,87 @@ export class ReportsController {
      * clarity & intonation
      *    average clarity and average intonation
      * student practice frequency
-     *    group by range
+     *    num of answers per student, group by range
+     * require attention
+     *    scenario / question  attempts, completion, pass rate, time spent, highest score, avg clarity, avg intonation, avg pace
      */
 
-    // module completion
+    // get list of users for further query
     const findTenantQuery = {
       where: {
         tenant_id: tenantId,
       },
     };
-    const allTenantModules: Array<Module> =
-      await this.modulesService.findAllModules(findTenantQuery);
-    const moduleCompletions =
-      ReportsService.calculateModuleCompletion(allTenantModules);
-    const topModuleCompletions =
-      ReportsService.getTopModuleCompletions(moduleCompletions);
-
-    // clarity & intonation
     const tenantUsers = await this.userService.findAll(findTenantQuery);
     const tenantUserIds = tenantUsers.map((tu) => tu.id);
 
-    const resultAttributes = ['id', 'intonation', 'pronunciation'];
-    const allResults = await this.resultsService.findAll({
-      where: { created_by_id: tenantUserIds },
-      attributes: resultAttributes,
-    });
-    const avgClarityIntonation =
-      ReportsService.calculateAverageIntonationClarity(allResults);
+    const getModuleCompletion = async () => {
+      const allTenantModules: Array<Module> =
+        await this.modulesService.findAllModules(findTenantQuery);
+      const moduleCompletions =
+        ReportsService.calculateModuleCompletion(allTenantModules);
+      const topModuleCompletions =
+        ReportsService.getTopOrBottomModuleCompletions(
+          moduleCompletions,
+          'ASC',
+        );
+      return topModuleCompletions;
+    };
 
-    return { avgClarityIntonation, topModuleCompletions };
+    const getClarityIntonation = async () => {
+      const resultAttributes = ['id', 'intonation', 'pronunciation'];
+      const allResults = await this.resultsService.findAll({
+        where: { created_by_id: tenantUserIds },
+        attributes: resultAttributes,
+      });
+      const avgClarityIntonation =
+        ReportsService.calculateAverageIntonationClarity(allResults);
+      return avgClarityIntonation;
+    };
+
+    const getStudentPracticeFrequency = async () => {
+      const allAnswers = await this.answerService.findAll({
+        where: {
+          created_by_id: tenantUserIds,
+        },
+      });
+      const groupedByStudent = groupBy(allAnswers, 'created_by_id');
+      const practiceFrequencyTally =
+        ReportsService.tallyPracticeFrequency(groupedByStudent);
+      return practiceFrequencyTally;
+    };
+
+    const getRequireAttentionModules = async () => {
+      // get completion rate first, work backwards to get scenario data
+      const tenantUserAssignments: Array<User> =
+        await this.userService.findUserAssignments(findTenantQuery);
+
+      const bottomCompletionModules =
+        ReportsService.getTopOrBottomModuleCompletions(
+          allTenantModules,
+          'DESC',
+        );
+
+      return bottomCompletionModules;
+    };
+
+    const [
+      requireAttentionModules,
+      topModuleCompletions,
+      avgClarityIntonation,
+      practiceFrequency,
+    ] = await Promise.all([
+      getRequireAttentionModules(),
+      getModuleCompletion(),
+      getClarityIntonation(),
+      getStudentPracticeFrequency(),
+    ]);
+
+    return {
+      requireAttentionModules,
+      practiceFrequency,
+      avgClarityIntonation,
+      topModuleCompletions,
+    };
   }
 }
