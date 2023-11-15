@@ -1,16 +1,16 @@
-import { Controller, Get, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request } from '@nestjs/common';
 import { ResultsService } from 'src/results/results.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { UsersService } from 'src/users/users.service';
 import { ReportsService } from './reports.service';
-import { StudentProgressResponse, UserAssignment } from './reports.interface';
+import { UserAssignment } from './reports.interface';
 import { AssignmentsService } from 'src/assignments/assignments.service';
 import { ModulesService } from 'src/modules/modules.service';
 import { Module } from 'src/modules/modules.interface';
 import { AnswersService } from 'src/answers/answers.service';
 import { groupBy } from 'lodash';
-import { User } from 'src/users/user.interface';
+import { Assignment } from 'src/assignments/assignments.interface';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('reports')
@@ -27,13 +27,6 @@ export class ReportsController {
   async getStudentProgressReort(@Request() req) {
     const { tenantId } = req;
 
-    const tenantUserAssignmentResults: Array<UserAssignment> =
-      await this.userService.findUserAssignments({
-        where: {
-          tenant_id: tenantId,
-        },
-      });
-
     /**
      * student
      *    assignment completion rate = answers / assignment
@@ -43,31 +36,19 @@ export class ReportsController {
      *    best score = sort result by score -> pronunciation
      *    assignments = count(assignments)
      */
-    const userProgress: StudentProgressResponse[] =
-      tenantUserAssignmentResults.map((user: UserAssignment) => {
-        const { totalAnswers, completion } =
-          ReportsService.getStudentAssignmentCompletion(user.assignments);
-        const bestScore = ReportsService.getStudentBestStore(user.assignments);
 
-        return {
-          id: user.id,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          email: user.email,
-          completionRate: completion,
-          attempts: totalAnswers,
-          timeSpent: '',
-          bestScore: bestScore,
-          assignments: user.assignments.length,
-        };
+    const tenantUserAssignmentResults: Array<UserAssignment> =
+      await this.userService.findUserAssignments({
+        where: {
+          tenant_id: tenantId,
+        },
       });
 
+    const userProgress = ReportsService.processStudentAssignments(
+      tenantUserAssignmentResults,
+      ReportsService.getStudentProgress,
+    );
     return userProgress;
-  }
-
-  @Get('insights/pace-and-pauses')
-  getPaceAndPausesReport(@Param('id') id: string) {
-    return this.resultsService.findOne({ where: { id } });
   }
 
   @Get('insights')
@@ -83,7 +64,7 @@ export class ReportsController {
      * student practice frequency
      *    num of answers per student, group by range
      * require attention
-     *    scenario / question  attempts, completion, pass rate, time spent, highest score, avg clarity, avg intonation, avg pace
+     *    scenario / question, attempts, completion, pass rate, time spent, highest score, avg clarity, avg intonation, avg pace
      */
 
     // get list of users for further query
@@ -104,6 +85,7 @@ export class ReportsController {
         ReportsService.getTopOrBottomModuleCompletions(
           moduleCompletions,
           'ASC',
+          'completionRate',
         );
       return topModuleCompletions;
     };
@@ -115,7 +97,7 @@ export class ReportsController {
         attributes: resultAttributes,
       });
       const avgClarityIntonation =
-        ReportsService.calculateAverageIntonationClarity(allResults);
+        ReportsService.calculateAverageScores(allResults);
       return avgClarityIntonation;
     };
 
@@ -131,18 +113,21 @@ export class ReportsController {
       return practiceFrequencyTally;
     };
 
-    const getRequireAttentionModules = async () => {
-      // get completion rate first, work backwards to get scenario data
-      const tenantUserAssignments: Array<User> =
-        await this.userService.findUserAssignments(findTenantQuery);
-
-      const bottomCompletionModules =
-        ReportsService.getTopOrBottomModuleCompletions(
-          allTenantModules,
-          'DESC',
-        );
-
-      return bottomCompletionModules;
+    const getRequireAttentionQuestions = async () => {
+      const allTenantAssignments: Array<Assignment> =
+        await this.assignmentService.findAllAssignments({
+          where: { created_by_id: tenantUserIds },
+        });
+      const withCompletion =
+        ReportsService.calculateAssignmenetCompletion(allTenantAssignments);
+      const bottomFive = ReportsService.getTopOrBottomModuleCompletions(
+        withCompletion,
+        'DESC',
+        'completionRate',
+        5,
+      );
+      const metadata = ReportsService.getRequiredAttentionMetadata(bottomFive);
+      return metadata;
     };
 
     const [
@@ -151,7 +136,7 @@ export class ReportsController {
       avgClarityIntonation,
       practiceFrequency,
     ] = await Promise.all([
-      getRequireAttentionModules(),
+      getRequireAttentionQuestions(),
       getModuleCompletion(),
       getClarityIntonation(),
       getStudentPracticeFrequency(),

@@ -1,3 +1,5 @@
+import { Assignment } from 'src/assignments/assignments.interface';
+
 export class User {
   id: number;
   created: string;
@@ -13,4 +15,5 @@ export class User {
   created_by_id: number;
   modified_by_id: number;
   tenant_id: number;
+  assignments?: Assignment[];
 }

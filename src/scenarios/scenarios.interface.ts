@@ -3,9 +3,9 @@ import { Result } from '../results/results.interface';
 
 export interface Answer {
   id: number;
-  created: string;
+  created: Date;
   deleted: number;
-  modified: string;
+  modified: Date;
   audio_file_url: string;
   created_by_id: number;
   modified_by_id: number;
@@ -16,9 +16,9 @@ export interface Answer {
 
 export interface Question {
   id: number;
-  created: string;
+  created: Date;
   deleted: number;
-  modified: string;
+  modified: Date;
   audio_file_url: string;
   content: string;
   hint: string;
@@ -36,9 +36,9 @@ export interface Question {
 
 export interface Scenario {
   id: number;
-  created: string;
+  created: Date;
   deleted: number;
-  modified: string;
+  modified: Date;
   lang: string;
   name: string;
   created_by_id: number;

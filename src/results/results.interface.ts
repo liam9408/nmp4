@@ -1,8 +1,8 @@
 export interface Result {
   id: number;
-  created: string;
+  created: Date;
   deleted: number;
-  modified: string;
+  modified: Date;
   hyp: string;
   intonation: string;
   pace: string;
