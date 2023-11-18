@@ -54,28 +54,17 @@ export class ReportsController {
   @Get('insights')
   async getAssignmentCompletionReport(@Request() req) {
     const { tenantId } = req;
-    /**
-     * pace and pauses
-     *    t
-     * module completion
-     *    per module, total assigned vs total completed(all Questions in Assignments have Answers), percentage + attempts
-     * clarity & intonation
-     *    average clarity and average intonation
-     * student practice frequency
-     *    num of answers per student, group by range
-     * require attention
-     *    scenario / question, attempts, completion, pass rate, time spent, highest score, avg clarity, avg intonation, avg pace
-     */
 
-    // get list of users for further query
+    // Get list of users for further query
     const findTenantQuery = {
       where: {
         tenant_id: tenantId,
       },
     };
     const tenantUsers = await this.userService.findAll(findTenantQuery);
-    const tenantUserIds = tenantUsers.map((tu) => tu.id);
+    const tenantUserIds = tenantUsers.map((tenantUser) => tenantUser.id);
 
+    // Calculate module completion
     const getModuleCompletion = async () => {
       const allTenantModules: Array<Module> =
         await this.modulesService.findAllModules(findTenantQuery);
@@ -90,6 +79,7 @@ export class ReportsController {
       return topModuleCompletions;
     };
 
+    // Calculate average clarity and intonation
     const getClarityIntonation = async () => {
       const resultAttributes = ['id', 'intonation', 'pronunciation'];
       const allResults = await this.resultsService.findAll({
@@ -101,6 +91,7 @@ export class ReportsController {
       return avgClarityIntonation;
     };
 
+    // Calculate student practice frequency
     const getStudentPracticeFrequency = async () => {
       const allAnswers = await this.answerService.findAll({
         where: {
@@ -113,6 +104,7 @@ export class ReportsController {
       return practiceFrequencyTally;
     };
 
+    // Get questions that require attention
     const getRequireAttentionQuestions = async () => {
       const allTenantAssignments: Array<Assignment> =
         await this.assignmentService.findAllAssignments({
@@ -130,23 +122,29 @@ export class ReportsController {
       return metadata;
     };
 
-    const [
-      requireAttentionModules,
-      topModuleCompletions,
-      avgClarityIntonation,
-      practiceFrequency,
-    ] = await Promise.all([
-      getRequireAttentionQuestions(),
-      getModuleCompletion(),
-      getClarityIntonation(),
-      getStudentPracticeFrequency(),
-    ]);
+    try {
+      const [
+        requireAttentionModules,
+        topModuleCompletions,
+        avgClarityIntonation,
+        practiceFrequency,
+      ] = await Promise.all([
+        getRequireAttentionQuestions(),
+        getModuleCompletion(),
+        getClarityIntonation(),
+        getStudentPracticeFrequency(),
+      ]);
 
-    return {
-      requireAttentionModules,
-      practiceFrequency,
-      avgClarityIntonation,
-      topModuleCompletions,
-    };
+      return {
+        requireAttentionModules,
+        practiceFrequency,
+        avgClarityIntonation,
+        topModuleCompletions,
+      };
+    } catch (error) {
+      // Handle error gracefully
+      console.error(error);
+      throw new Error('An error occurred while generating the report.');
+    }
   }
 }
