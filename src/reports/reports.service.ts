@@ -210,7 +210,12 @@ export class ReportsService {
       tally(val.length);
     }
 
-    return practiceFrequencyTally;
+    return Object.entries(practiceFrequencyTally).map(
+      ([frequency, amount]) => ({
+        frequency,
+        amount,
+      }),
+    );
   }
 
   static calculateAssignmenetCompletion(assignments: Assignment[]) {
@@ -261,7 +266,7 @@ export class ReportsService {
     return data.map((row) => {
       const question = {
         id: row.question.id,
-        name: row.question.name,
+        name: row.question.content,
       };
 
       const flapMapResults = (question) => {

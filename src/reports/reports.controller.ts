@@ -73,7 +73,7 @@ export class ReportsController {
       const topModuleCompletions =
         ReportsService.getTopOrBottomModuleCompletions(
           moduleCompletions,
-          'ASC',
+          'DESC',
           'completionRate',
         );
       return topModuleCompletions;
