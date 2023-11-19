@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, Param } from '@nestjs/common';
 import { ResultsService } from 'src/results/results.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -11,6 +11,7 @@ import { Module } from 'src/modules/modules.interface';
 import { AnswersService } from 'src/answers/answers.service';
 import { groupBy } from 'lodash';
 import { Assignment } from 'src/assignments/assignments.interface';
+import { roundToOneDecimal } from 'src/common/utils/maths';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('reports')
@@ -146,5 +147,75 @@ export class ReportsController {
       console.error(error);
       throw new Error('An error occurred while generating the report.');
     }
+  }
+
+  @Get('/insights/student/:id')
+  async getStudentInsights(@Request() req, @Param('id') id: string) {
+    const studentId = id;
+
+    const getLast30Days = () => {
+      const dates = [];
+      for (let i = 0; i < 30; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const formattedDate = date.toISOString().split('T')[0];
+        dates.push(formattedDate);
+      }
+      return dates;
+    };
+    const timeArr = getLast30Days();
+
+    const groupResultsByDate = async () => {
+      const allAnswers = await this.resultsService.findAll({
+        where: {
+          created_by_id: studentId,
+        },
+      });
+
+      const groupedByDate = timeArr.reduce((acc, date) => {
+        const answersForDate = allAnswers.filter((answer) => {
+          const answerDate = answer.created.toISOString().split('T')[0];
+          return answerDate === date;
+        });
+
+        let totalIntonation = 0;
+        let totalPronunciation = 0;
+        let totalPace = 0;
+
+        answersForDate.forEach((answer) => {
+          totalIntonation += Number(answer.intonation);
+          totalPronunciation += Number(answer.pronunciation);
+          totalPace += Number(answer.pace);
+        });
+
+        const averageIntonation = roundToOneDecimal(
+          totalIntonation / answersForDate.length || 0,
+        );
+        const averagePronunciation = roundToOneDecimal(
+          totalPronunciation / answersForDate.length || 0,
+        );
+        const averagePace = roundToOneDecimal(
+          totalPace / answersForDate.length || 0,
+        );
+
+        acc[date] = {
+          averageIntonation,
+          averagePronunciation,
+          averagePace,
+        };
+
+        return acc;
+      }, {});
+
+      return groupedByDate;
+    };
+    const res = await groupResultsByDate();
+    return res;
+  }
+
+  catch(error) {
+    // Handle error gracefully
+    console.error(error);
+    throw new Error('An error occurred while generating the report.');
   }
 }

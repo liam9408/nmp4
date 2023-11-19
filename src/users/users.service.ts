@@ -2,6 +2,7 @@ import { FindOptions } from 'sequelize';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
+import { User as UserInterFace } from './user.interface';
 import { User } from '../database/entities/user.model';
 import { FindUserDto } from './dto/find-user.dto';
 import { Assignment } from 'src/database/entities/assignment.model';
@@ -80,5 +81,40 @@ export class UsersService {
   async findOne(findResultDto?: FindOptions<FindUserDto>): Promise<User> {
     const result = await this.userModel.findOne({ ...findResultDto });
     return result;
+  }
+
+  async findStudentAssignments(
+    findResultDto?: FindOptions<FindUserDto>,
+  ): Promise<UserInterFace> {
+    const result = await this.userModel.findOne({
+      ...findResultDto,
+      attributes: { exclude: ['password', 'verification_code'] },
+      include: [
+        {
+          model: this.assignmentModel,
+          include: [
+            {
+              model: this.scenarioModel,
+              include: [
+                {
+                  model: this.questionModel,
+                  include: [
+                    {
+                      model: this.answerModel,
+                      include: [
+                        {
+                          model: this.resultModel,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    return result.toJSON();
   }
 }
