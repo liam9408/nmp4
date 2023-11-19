@@ -172,15 +172,15 @@ export class ReportsController {
         },
       });
 
+      let totalIntonation = 0;
+      let totalPronunciation = 0;
+      let totalPace = 0;
+
       const groupedByDate = timeArr.reduce((acc, date) => {
         const answersForDate = allAnswers.filter((answer) => {
           const answerDate = answer.created.toISOString().split('T')[0];
           return answerDate === date;
         });
-
-        let totalIntonation = 0;
-        let totalPronunciation = 0;
-        let totalPace = 0;
 
         answersForDate.forEach((answer) => {
           totalIntonation += Number(answer.intonation);
@@ -207,7 +207,22 @@ export class ReportsController {
         return acc;
       }, {});
 
-      return groupedByDate;
+      const overallAverageIntonation = roundToOneDecimal(
+        totalIntonation / allAnswers.length || 0,
+      );
+      const overallAveragePronunciation = roundToOneDecimal(
+        totalPronunciation / allAnswers.length || 0,
+      );
+      const overallAveragePace = roundToOneDecimal(
+        totalPace / allAnswers.length || 0,
+      );
+
+      return {
+        groupedByDate,
+        overallAverageIntonation,
+        overallAveragePronunciation,
+        overallAveragePace,
+      };
     };
     const res = await groupResultsByDate();
     return res;
