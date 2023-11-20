@@ -82,6 +82,6 @@ export class Answer extends Model {
   @BelongsTo(() => Result)
   result: Result;
 
-  // @BelongsTo(() => Result)
-  // result: Result;
+  @BelongsTo(() => User)
+  user: User;
 }

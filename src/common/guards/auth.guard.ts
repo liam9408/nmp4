@@ -24,8 +24,6 @@ export class AuthGuard implements CanActivate {
         Buffer.from(token.split('.')[1], 'base64').toString(),
       );
 
-      console.log(payload);
-
       const user = await this.usersService.findOne({
         where: { id: payload.sub },
       });

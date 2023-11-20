@@ -11,7 +11,7 @@ import { Module } from 'src/modules/modules.interface';
 import { AnswersService } from 'src/answers/answers.service';
 import { groupBy } from 'lodash';
 import { Assignment } from 'src/assignments/assignments.interface';
-import { roundToOneDecimal } from 'src/common/utils/maths';
+import { QuestionsService } from 'src/questions/questions.service';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('reports')
@@ -22,6 +22,7 @@ export class ReportsController {
     private readonly assignmentService: AssignmentsService,
     private readonly modulesService: ModulesService,
     private readonly answerService: AnswersService,
+    private readonly questionService: QuestionsService,
   ) {}
 
   @Get('progress/students')
@@ -153,79 +154,38 @@ export class ReportsController {
   async getStudentInsights(@Request() req, @Param('id') id: string) {
     const studentId = id;
 
-    const getLast30Days = () => {
-      const dates = [];
-      for (let i = 0; i < 30; i++) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const formattedDate = date.toISOString().split('T')[0];
-        dates.push(formattedDate);
-      }
-      return dates;
-    };
-    const timeArr = getLast30Days();
-
-    const groupResultsByDate = async () => {
-      const allAnswers = await this.resultsService.findAll({
+    const [student, allResults] = await Promise.all([
+      this.userService.findOne({
+        where: {
+          id: studentId,
+        },
+      }),
+      this.resultsService.findAll({
         where: {
           created_by_id: studentId,
         },
-      });
+      }),
+    ]);
 
-      let totalIntonation = 0;
-      let totalPronunciation = 0;
-      let totalPace = 0;
+    const res = await ReportsService.calculateStudentStatsProgress(
+      studentId,
+      allResults,
+    );
+    return { student, ...res };
+  }
 
-      const groupedByDate = timeArr.reduce((acc, date) => {
-        const answersForDate = allAnswers.filter((answer) => {
-          const answerDate = answer.created.toISOString().split('T')[0];
-          return answerDate === date;
-        });
+  @Get('insights/requires-attention/question/:id')
+  async getRequireAttentionQuestion(@Request() req, @Param('id') id: string) {
+    const [question, answers] = await Promise.all([
+      this.questionService.findOne({ where: { id } }),
+      this.answerService.findAll({
+        where: {
+          question_id: id,
+        },
+      }),
+    ]);
 
-        answersForDate.forEach((answer) => {
-          totalIntonation += Number(answer.intonation);
-          totalPronunciation += Number(answer.pronunciation);
-          totalPace += Number(answer.pace);
-        });
-
-        const averageIntonation = roundToOneDecimal(
-          totalIntonation / answersForDate.length || 0,
-        );
-        const averagePronunciation = roundToOneDecimal(
-          totalPronunciation / answersForDate.length || 0,
-        );
-        const averagePace = roundToOneDecimal(
-          totalPace / answersForDate.length || 0,
-        );
-
-        acc[date] = {
-          averageIntonation,
-          averagePronunciation,
-          averagePace,
-        };
-
-        return acc;
-      }, {});
-
-      const overallAverageIntonation = roundToOneDecimal(
-        totalIntonation / allAnswers.length || 0,
-      );
-      const overallAveragePronunciation = roundToOneDecimal(
-        totalPronunciation / allAnswers.length || 0,
-      );
-      const overallAveragePace = roundToOneDecimal(
-        totalPace / allAnswers.length || 0,
-      );
-
-      return {
-        groupedByDate,
-        overallAverageIntonation,
-        overallAveragePronunciation,
-        overallAveragePace,
-      };
-    };
-    const res = await groupResultsByDate();
-    return res;
+    return { question, answers };
   }
 
   catch(error) {

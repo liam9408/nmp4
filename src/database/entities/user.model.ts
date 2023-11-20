@@ -12,6 +12,7 @@ import { Tenant } from './tenant.model'; // Import the Tenant model if you have 
 import { Role } from './role.model';
 import { UserRole } from './userRole.model';
 import { Assignment } from './assignment.model';
+import { Answer } from './answer.model';
 
 @Table({
   modelName: 'user',
@@ -116,6 +117,9 @@ export class User extends Model {
 
   @HasMany(() => Assignment)
   assignments: Assignment[];
+
+  @HasMany(() => Answer)
+  answers: Answer[];
 
   getRoles: () => Role[];
 

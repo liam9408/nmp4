@@ -6,6 +6,7 @@ import { ResultsModule } from 'src/results/results.module';
 import { AssignmentsModule } from 'src/assignments/assignments.module';
 import { ModulesModule } from 'src/modules/modules.module';
 import { AnswersModule } from 'src/answers/answers.module';
+import { QuestionsModule } from 'src/questions/questions.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AnswersModule } from 'src/answers/answers.module';
     AssignmentsModule,
     ModulesModule,
     AnswersModule,
+    QuestionsModule,
   ],
   controllers: [ReportsController],
   providers: [ReportsService],

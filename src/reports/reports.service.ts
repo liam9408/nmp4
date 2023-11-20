@@ -101,7 +101,7 @@ export class ReportsService {
 
       return {
         id: module.id,
-        name: module.name,
+        module: module.name,
         totalAssignment,
         totalCompletion,
         completionRate: totalCompletion / totalAssignment,
@@ -301,5 +301,113 @@ export class ReportsService {
         avgPace,
       };
     });
+  }
+
+  static async calculateStudentStatsProgress(studentId, allResults) {
+    const getLast30Days = () => {
+      const dates = [];
+      for (let i = 0; i < 30; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const formattedDate = date.toISOString().split('T')[0];
+        dates.push(formattedDate);
+      }
+      return dates;
+    };
+    const timeArr = getLast30Days();
+
+    const groupResultsByDate = async () => {
+      // const allResults = await this.resultsService.findAll({
+      //   where: {
+      //     created_by_id: studentId,
+      //   },
+      // });
+
+      let totalStudentIntonation = 0;
+      let totalStudentPronunciation = 0;
+      let totalStudentPace = 0;
+
+      const groupedByDateObject = timeArr.reduce((acc, date) => {
+        const resultsForDate = allResults.filter((result) => {
+          const answerDate = result.created.toISOString().split('T')[0];
+          return answerDate === date;
+        });
+
+        let totalIntonation = 0;
+        let totalPronunciation = 0;
+        let totalPace = 0;
+
+        resultsForDate.forEach((result) => {
+          totalIntonation += Number(result.intonation);
+          totalPronunciation += Number(result.pronunciation);
+          totalPace += Number(result.pace);
+          totalStudentIntonation += Number(result.intonation);
+          totalStudentPronunciation += Number(result.pronunciation);
+          totalStudentPace += Number(result.pace);
+        });
+
+        console.log(
+          date,
+          totalIntonation,
+          totalPronunciation,
+          resultsForDate.length,
+        );
+
+        const averageIntonation =
+          resultsForDate.length > 0
+            ? roundToOneDecimal(totalIntonation / resultsForDate.length)
+            : 0;
+
+        const averagePronunciation =
+          resultsForDate.length > 0
+            ? roundToOneDecimal(totalPronunciation / resultsForDate.length)
+            : 0;
+
+        const averagePace =
+          resultsForDate.length > 0
+            ? roundToOneDecimal(totalPace / resultsForDate.length)
+            : 0;
+
+        acc[date] = {
+          averageIntonation,
+          averagePronunciation,
+          averagePace,
+          tension: 0.5,
+        };
+
+        return acc;
+      }, {});
+
+      const groupedByDateArray = Object.entries(groupedByDateObject).map(
+        ([date, averages]: any) => ({
+          date,
+          ...averages,
+        }),
+      );
+
+      const overallAverageIntonation =
+        allResults.length > 0
+          ? roundToOneDecimal(totalStudentIntonation / allResults.length)
+          : 0;
+
+      const overallAveragePronunciation =
+        allResults.length > 0
+          ? roundToOneDecimal(totalStudentPronunciation / allResults.length)
+          : 0;
+
+      const overallAveragePace =
+        allResults.length > 0
+          ? roundToOneDecimal(totalStudentPace / allResults.length)
+          : 0;
+
+      return {
+        groupedByDate: groupedByDateArray.reverse(),
+        overallAverageIntonation: overallAverageIntonation,
+        overallAveragePronunciation: overallAveragePronunciation,
+        overallAveragePace: overallAveragePace,
+      };
+    };
+    const res = await groupResultsByDate();
+    return res;
   }
 }
