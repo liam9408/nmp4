@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as moment from 'moment';
 import {
   AssignmentCompletionRate,
   StudentProgressResponse,
@@ -409,5 +410,41 @@ export class ReportsService {
     };
     const res = await groupResultsByDate();
     return res;
+  }
+
+  static getTimeRangeQuery(field: string, option: string) {
+    let startDate, endDate;
+
+    switch (option) {
+      case 'All (Default)':
+        startDate = moment()
+          .subtract(100, 'years')
+          .startOf('day')
+          .format('YYYY-MM-DD HH:mm:ss');
+        endDate = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        break;
+      case 'This week':
+        startDate = moment().startOf('week').format('YYYY-MM-DD HH:mm:ss');
+        endDate = moment().endOf('week').format('YYYY-MM-DD HH:mm:ss');
+        break;
+      case 'This Month':
+        startDate = moment().startOf('month').format('YYYY-MM-DD HH:mm:ss');
+        endDate = moment().endOf('month').format('YYYY-MM-DD HH:mm:ss');
+        break;
+      case 'Last 3 Months':
+        startDate = moment()
+          .subtract(3, 'months')
+          .startOf('month')
+          .format('YYYY-MM-DD HH:mm:ss');
+        endDate = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        break;
+      default:
+        throw new Error(`Invalid time range option: ${option}`);
+    }
+
+    return {
+      start: startDate,
+      end: endDate,
+    };
   }
 }

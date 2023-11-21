@@ -23,6 +23,7 @@ export class AnswersService {
       ...findAnswerDto,
       include: [{ model: this.resultsModel }, { model: this.userModel }],
     });
+
     return results.map((result) => result.toJSON());
   }
 

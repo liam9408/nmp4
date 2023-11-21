@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards, Request, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Request,
+  Param,
+  Post,
+  Body,
+} from '@nestjs/common';
 import { ResultsService } from 'src/results/results.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -12,6 +20,7 @@ import { AnswersService } from 'src/answers/answers.service';
 import { groupBy } from 'lodash';
 import { Assignment } from 'src/assignments/assignments.interface';
 import { QuestionsService } from 'src/questions/questions.service';
+import { getTimeRangeQuery } from 'src/common/utils/sequelize';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('reports')
@@ -53,9 +62,20 @@ export class ReportsController {
     return userProgress;
   }
 
-  @Get('insights')
-  async getAssignmentCompletionReport(@Request() req) {
+  @Post('insights')
+  async getAssignmentCompletionReport(@Request() req, @Body() body) {
     const { tenantId } = req;
+    const { time } = body;
+
+    // "All (Default)",
+    // "This week",
+    // "This Month",
+    // "Last 3 Months",
+    const { start, end } = ReportsService.getTimeRangeQuery('created', time);
+    const timeRangeQuery = getTimeRangeQuery('created', {
+      startDate: start,
+      endDate: end,
+    });
 
     // Get list of users for further query
     const findTenantQuery = {
@@ -69,7 +89,12 @@ export class ReportsController {
     // Calculate module completion
     const getModuleCompletion = async () => {
       const allTenantModules: Array<Module> =
-        await this.modulesService.findAllModules(findTenantQuery);
+        await this.modulesService.findAllModules({
+          where: {
+            tenant_id: tenantId,
+            ...timeRangeQuery,
+          },
+        });
       const moduleCompletions =
         ReportsService.calculateModuleCompletion(allTenantModules);
       const topModuleCompletions =
@@ -85,7 +110,7 @@ export class ReportsController {
     const getClarityIntonation = async () => {
       const resultAttributes = ['id', 'intonation', 'pronunciation'];
       const allResults = await this.resultsService.findAll({
-        where: { created_by_id: tenantUserIds },
+        where: { created_by_id: tenantUserIds, ...timeRangeQuery },
         attributes: resultAttributes,
       });
       const avgClarityIntonation =
@@ -98,6 +123,7 @@ export class ReportsController {
       const allAnswers = await this.answerService.findAll({
         where: {
           created_by_id: tenantUserIds,
+          ...timeRangeQuery,
         },
       });
       const groupedByStudent = groupBy(allAnswers, 'created_by_id');
@@ -110,7 +136,7 @@ export class ReportsController {
     const getRequireAttentionQuestions = async () => {
       const allTenantAssignments: Array<Assignment> =
         await this.assignmentService.findAllAssignments({
-          where: { created_by_id: tenantUserIds },
+          where: { created_by_id: tenantUserIds, ...timeRangeQuery },
         });
       const withCompletion =
         ReportsService.calculateAssignmenetCompletion(allTenantAssignments);
