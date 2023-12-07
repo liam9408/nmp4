@@ -42,7 +42,7 @@ export class ReportsService {
     } else if (totalAnswers >= totalQuestions) {
       return 100;
     } else {
-      return (totalAnswers / totalQuestions) * 100;
+      return roundToOneDecimal((totalAnswers / totalQuestions) * 100);
     }
   }
 
